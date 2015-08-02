@@ -35,6 +35,8 @@ bool FirstBossScene::init()
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
+	//可以解锁的关卡
+	ChooseGuan::choosenum = 2;
 	mantype = HelloWorld::getTypeMan();
 	if (mantype == 1) {
 		manfu = Man_1();
@@ -396,7 +398,7 @@ void FirstBossScene::enemyCreate(float f)
 	enemyBody->setGravityEnable(false);
 	enemy->setPhysicsBody(enemyBody);
 
-	this->addChild(enemy);
+	this->addChild(enemy, 2);
 	this->enemyList.pushBack(enemy);
 }
 
@@ -446,7 +448,7 @@ void FirstBossScene::setBomb()
 		bombBody->setGravityEnable(false);
 		bomb->setPhysicsBody(bombBody);
 
-		this->addChild(bomb, 1);
+		this->addChild(bomb, 2);
 		bombs.pushBack(bomb);
 
 		//获得炸弹的射程
@@ -569,9 +571,27 @@ void FirstBossScene::gameOver() {
 }
 
 void FirstBossScene::win() {
-	// 解锁第二关
-	ChooseGuan::canChoose2 = true;
-	UserDefault::getInstance()->setBoolForKey("canChoose2", true);
+
+	if (ChooseGuan::choosenum == 2) {
+		// 解锁第二关
+		ChooseGuan::canChoose2 = true;
+		UserDefault::getInstance()->setBoolForKey("canChoose2", true);
+	}
+	else if (ChooseGuan::choosenum == 3) {
+		// 解锁第三关
+		ChooseGuan::canChoose3 = true;
+		UserDefault::getInstance()->setBoolForKey("canChoose3", true);
+	}
+	else if (ChooseGuan::choosenum == 4) {
+		// 解锁第四关
+		ChooseGuan::canChoose4 = true;
+		UserDefault::getInstance()->setBoolForKey("canChoose4", true);
+	}
+	else if (ChooseGuan::choosenum == 5) {
+		// 解锁第五关
+		ChooseGuan::canChoose5 = true;
+		UserDefault::getInstance()->setBoolForKey("canChoose5", true);
+	}
 
 	auto scene = GameOverScene::createScene();
 	auto gameOverScene = TransitionTurnOffTiles::create(1.0f, scene);

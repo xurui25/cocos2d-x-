@@ -43,10 +43,10 @@ bool GameOverScene::init()
 		//auto backItem = MenuItemImage::create("continue.png", "continue2.png", CC_CALLBACK_1(GameOverScene::back_, this));
 		//backItem->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y));
 		// 回主页选项
-		auto backHello = MenuItemImage::create("back_blue.png", "back_yellow.png", CC_CALLBACK_1(GameOverScene::goHello, this));
+		auto backHello = MenuItemImage::create("return.png", "return2.png", CC_CALLBACK_1(GameOverScene::goHello, this));
 		backHello->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y - 1 * backHello->getContentSize().height));
 		//退出游戏菜单项
-		auto closeItem = MenuItemImage::create("quit_blue.png", "quit_yellow.png", CC_CALLBACK_1(GameOverScene::exitGame, this));
+		auto closeItem = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_1(GameOverScene::exitGame, this));
 		closeItem->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y - 2 * backHello->getContentSize().height));
 		//把菜单项添加到菜单精灵中
 		auto menu = Menu::create(backHello, closeItem, NULL);
@@ -56,36 +56,20 @@ bool GameOverScene::init()
 	}
 	else {
 		//下一关选项
-		auto backItem = MenuItemImage::create("nextMisson_blue.png", "nextMisson_yellow.png", CC_CALLBACK_1(GameOverScene::nextGame, this));
+		auto backItem = MenuItemImage::create("next.png", "next2.png", CC_CALLBACK_1(GameOverScene::nextGame, this));
 		backItem->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y));
 		// 回主页选项
-		auto backHello = MenuItemImage::create("back_blue.png", "back_yellow.png", CC_CALLBACK_1(GameOverScene::goHello, this));
+		auto backHello = MenuItemImage::create("return.png", "return2.png", CC_CALLBACK_1(GameOverScene::goHello, this));
 		backHello->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y - 1 * backItem->getContentSize().height));
 		//退出游戏菜单项
-		auto closeItem = MenuItemImage::create("quit_blue.png", "quit_yellow.png", CC_CALLBACK_1(GameOverScene::exitGame, this));
+		auto closeItem = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_1(GameOverScene::exitGame, this));
 		closeItem->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y - 2 * backItem->getContentSize().height));
 		//把菜单项添加到菜单精灵中
 		auto menu = Menu::create(backItem, backHello, closeItem, NULL);
 		menu->setPosition(Vec2::ZERO);
 		//把菜单精灵添加到当前的层中
 		this->addChild(menu, 1);
-	}/*
-	else if (mode == 2) {
-		//下一关选项
-		auto backItem = MenuItemImage::create("nextMisson_blue.png", "nextMisson_yellow.png", CC_CALLBACK_1(GameOverScene::SecondGame, this));
-		backItem->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y));
-		// 回主页选项
-		auto backHello = MenuItemImage::create("back_blue.png", "back_yellow.png", CC_CALLBACK_1(GameOverScene::goHello, this));
-		backHello->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y - 1 * backItem->getContentSize().height));
-		//退出游戏菜单项
-		auto closeItem = MenuItemImage::create("quit_blue.png", "quit_yellow.png", CC_CALLBACK_1(GameOverScene::exitGame, this));
-		closeItem->setPosition(Vec2(origin.x + visibleSize.width / 2, visibleSize.height / 2 + origin.y - 2 * backItem->getContentSize().height));
-		//把菜单项添加到菜单精灵中
-		auto menu = Menu::create(backItem, backHello, closeItem, NULL);
-		menu->setPosition(Vec2::ZERO);
-		//把菜单精灵添加到当前的层中
-		this->addChild(menu, 1);
-	}*/
+	}
 
 	return true;
 }
@@ -113,12 +97,34 @@ void GameOverScene::nextGame(Ref* pSender) {
 	}
 	else if (win_num == 2) {
 		Help::setPass(2);
-		auto scene = Help::createScene(2);
+		auto scene = Help::createScene();
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}
 	else if (win_num == 3) {
 		auto scene = TranScene::createScene(2);
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (win_num == 4) {
+		Help::setPass(3);
+		auto scene = Help::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (win_num == 5) {
+		auto scene = TranScene::createScene(3);
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (win_num == 6) {
+		Help::setPass(4);
+		auto scene = Help::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (win_num == 7) {
+		auto scene = TranScene::createScene(4);
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}

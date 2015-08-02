@@ -26,6 +26,8 @@ public:
 	static bool canChoose4;
 	static bool canChoose5;
 
+	static int choosenum;
+
 	CREATE_FUNC(ChooseGuan);
 };
 #endif

@@ -3,12 +3,14 @@
 #include "GameScene2.h"
 #include "ChooseGuan.h"
 #include "AppDelegate.h"
+#include "GameScene3.h"
+#include "GameScene4.h"
 
 USING_NS_CC;
 
 int Help::pass = 1;
 
-Scene* Help::createScene(int i)
+Scene* Help::createScene()
 {
 	auto scene = Scene::create();
 	auto layer = Help::create();
@@ -47,8 +49,25 @@ bool Help::init() {
 		bg1->setTag(101);
 		this->addChild(bg1, 0);
 	}
-	else {
-
+	else if (getPass() == 3){
+		auto bg1 = Sprite::create("help_bg3.jpg");
+		//为适应屏幕进行缩放
+		bg1->setScaleX((float)visibleSize.width / (float)bg1->getContentSize().width);
+		bg1->setScaleY((float)visibleSize.height / (float)bg1->getContentSize().height);
+		bg1->setPosition(Vec2(origin.x + visibleSize.width / 2, 0));
+		bg1->setAnchorPoint(Vec2(0.5, 0));
+		bg1->setTag(101);
+		this->addChild(bg1, 0);
+	}
+	else if (getPass() == 4) {
+		auto bg1 = Sprite::create("help_bg4.png");
+		//为适应屏幕进行缩放
+		bg1->setScaleX((float)visibleSize.width / (float)bg1->getContentSize().width);
+		bg1->setScaleY((float)visibleSize.height / (float)bg1->getContentSize().height);
+		bg1->setPosition(Vec2(origin.x + visibleSize.width / 2, 0));
+		bg1->setAnchorPoint(Vec2(0.5, 0));
+		bg1->setTag(101);
+		this->addChild(bg1, 0);
 	}
 	
 	auto MagicItem = MenuItemImage::create("continue.png", "continue2.png",
@@ -70,6 +89,16 @@ void Help::menuContinueCallback(Ref* spender) {
 	}
 	else if (getPass() == 2) {
 		auto scene = GameScene2::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (getPass() == 3) {
+		auto scene = GameScene3::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (getPass() == 4) {
+		auto scene = GameScene4::createScene();
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}

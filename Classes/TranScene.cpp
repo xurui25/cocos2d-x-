@@ -1,6 +1,8 @@
 #include "TranScene.h"
 #include "SecondBossScene.h"
 #include "FirstBossScene.h"
+#include "ThirdBossScene.h"
+#include "FourthBossScene.h"
 
 USING_NS_CC;
 
@@ -179,6 +181,16 @@ void TranScene::menuMagic1Callback(Ref* pSender)
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}
+	else if (Checkpoint == 3) {
+		auto scene = ThirdBossScene::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (Checkpoint == 4) {
+		auto scene = FourthBossScene::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
 }
 
 void TranScene::menuMagic2Callback(Ref* pSender) {
@@ -193,6 +205,16 @@ void TranScene::menuMagic2Callback(Ref* pSender) {
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}
+	else if (Checkpoint == 3) {
+		auto scene = ThirdBossScene::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (Checkpoint == 4) {
+		auto scene = FourthBossScene::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
 }
 
 void TranScene::menuMagic3Callback(Ref* pSender) {
@@ -204,6 +226,16 @@ void TranScene::menuMagic3Callback(Ref* pSender) {
 	}
 	else if (Checkpoint == 2) {
 		auto scene = SecondBossScene::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (Checkpoint == 3) {
+		auto scene = ThirdBossScene::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (Checkpoint == 4) {
+		auto scene = FourthBossScene::createScene();
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}

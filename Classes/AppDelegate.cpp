@@ -1,5 +1,6 @@
 #include "AppDelegate.h"
-#include "HelloWorldScene.h"
+#include "BackGround.h"
+#include "translate.h"
 
 USING_NS_CC;
 
@@ -31,7 +32,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 		//这里是游戏名称，就是打开win32窗口左上方显示的title
-        glview = GLViewImpl::create("炸鱼");
+		glview = GLViewImpl::create(Translate::WStrToUTF8_(L"炸鱼"));
 		//设置窗口大小
 		//Size visibleSize = Director::getInstance()->getVisibleSize();
 		//scale_x = (float)visibleSize.width / 1200.0;
@@ -43,13 +44,13 @@ bool AppDelegate::applicationDidFinishLaunching() {
 	//为了适配手机端
 	//glview->setDesignResolutionSize(1200, 720, ResolutionPolicy::SHOW_ALL);
     // turn on display FPS
-    //director->setDisplayStats(true);
+    director->setDisplayStats(true);
 
     // set FPS. the default value is 1.0/60 if you don't call this
     director->setAnimationInterval(1.0 / 60);
 
     // create a scene. it's an autorelease object
-    auto scene = HelloWorld::createScene();
+    auto scene = BackGround::createScene();
 
     // run
     director->runWithScene(scene);

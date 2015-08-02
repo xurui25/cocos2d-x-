@@ -11,6 +11,7 @@ bool ChooseGuan::canChoose2 = false;
 bool ChooseGuan::canChoose3 = false;
 bool ChooseGuan::canChoose4 = false;
 bool ChooseGuan::canChoose5 = false;
+int ChooseGuan::choosenum = 1;
 
 Scene* ChooseGuan::createScene()
 {
@@ -36,10 +37,10 @@ bool ChooseGuan::init()
 	{
 		UserDefault::getInstance()->setBoolForKey("isExist", true);
 		UserDefault::getInstance()->setBoolForKey("canChoose1", true);
-		UserDefault::getInstance()->setBoolForKey("canChoose2", false);
-		UserDefault::getInstance()->setBoolForKey("canChoose3", false);
-		UserDefault::getInstance()->setBoolForKey("canChoose4", false);
-		UserDefault::getInstance()->setBoolForKey("canChoose5", false);
+		UserDefault::getInstance()->setBoolForKey("canChoose2", true);
+		UserDefault::getInstance()->setBoolForKey("canChoose3", true);
+		UserDefault::getInstance()->setBoolForKey("canChoose4", true);
+		UserDefault::getInstance()->setBoolForKey("canChoose5", true);
 	}
 	canChoose1 = UserDefault::getInstance()->getBoolForKey("canChoose1");
 	canChoose2 = UserDefault::getInstance()->getBoolForKey("canChoose2");
@@ -88,8 +89,8 @@ bool ChooseGuan::init()
 	}
 
 	// 回主页按钮和清除记录按钮
-	auto goHome = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_0(ChooseGuan::goHello, this));
-	auto clearRecord = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_0(ChooseGuan::clearRec, this));
+	auto goHome = MenuItemImage::create("return.png", "return2.png", CC_CALLBACK_0(ChooseGuan::goHello, this));
+	auto clearRecord = MenuItemImage::create("clean.png", "clean2.png", CC_CALLBACK_0(ChooseGuan::clearRec, this));
 
 	auto menu2 = Menu::create(goHome, clearRecord, NULL);
 	menu2->alignItemsHorizontallyWithPadding(30);
@@ -104,7 +105,7 @@ void ChooseGuan::selectGuan1() {
 	// 进入GameScene场景
 	Help::setPass(1);
 	this->stopAllActions();
-	auto scene = Help::createScene(1);
+	auto scene = Help::createScene();
 	auto gameScene = TransitionSlideInR::create(1.0f, scene);
 	Director::getInstance()->replaceScene(gameScene);
 }
@@ -113,7 +114,7 @@ void ChooseGuan::selectGuan2() {
 	// 进入GameScene场景
 	Help::setPass(2);
 	this->stopAllActions();
-	auto scene = Help::createScene(2);
+	auto scene = Help::createScene();
 	auto gameScene = TransitionSlideInR::create(1.0f, scene);
 	Director::getInstance()->replaceScene(gameScene);
 }
@@ -122,7 +123,7 @@ void ChooseGuan::selectGuan3() {
 	// 进入GameScene场景
 	Help::setPass(3);
 	this->stopAllActions();
-	auto scene = Help::createScene(3);
+	auto scene = Help::createScene();
 	auto gameScene = TransitionSlideInR::create(1.0f, scene);
 	Director::getInstance()->replaceScene(gameScene);
 }
@@ -131,7 +132,7 @@ void ChooseGuan::selectGuan4() {
 	// 进入GameScene场景
 	Help::setPass(4);
 	this->stopAllActions();
-	auto scene = Help::createScene(4);
+	auto scene = Help::createScene();
 	auto gameScene = TransitionSlideInR::create(1.0f, scene);
 	Director::getInstance()->replaceScene(gameScene);
 }
@@ -140,7 +141,7 @@ void ChooseGuan::selectGuan5() {
 	// 进入GameScene场景
 	Help::setPass(5);
 	this->stopAllActions();
-	auto scene = Help::createScene(5);
+	auto scene = Help::createScene();
 	auto gameScene = TransitionSlideInR::create(1.0f, scene);
 	Director::getInstance()->replaceScene(gameScene);
 }

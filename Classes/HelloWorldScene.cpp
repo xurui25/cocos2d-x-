@@ -5,6 +5,7 @@
 #include "ChooseGuan.h"
 #include "cocostudio/CocoStudio.h"
 #include "help.h"
+#include "Collision.h"
 
 USING_NS_CC;
 using namespace cocostudio;
@@ -45,11 +46,13 @@ bool HelloWorld::init()
 	this->addChild(bg1, 0);
 
 	//骨骼动画
-	ArmatureDataManager::getInstance()->addArmatureFileInfo("StartAnimation0.png", "StartAnimation0.plist", "StartAnimation.ExportJson");
-	Armature *armature = Armature::create("StartAnimation");
-	armature->setPosition(Point(visibleSize.width * 0.5, visibleSize.height * 0.8));
+	ArmatureDataManager::getInstance()->addArmatureFileInfo("fishAN0.png", "fishAN0.plist", "fishAN.ExportJson");
+	Armature *armature = Armature::create("fishAN");
+	armature->setScaleX(visibleSize.width / armature->getContentSize().width);
+	armature->setScaleY(visibleSize.height / armature->getContentSize().height);
+	armature->setPosition(Point(visibleSize.width/2,visibleSize.height/2));
 	// 播放动画
-	armature->getAnimation()->play("Animation1");
+	armature->getAnimation()->play("fishAction");
 	this->addChild(armature);
 
 
@@ -58,7 +61,7 @@ bool HelloWorld::init()
 		CC_CALLBACK_1(HelloWorld::menuStartCallback, this));
 	startItem->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
 	//关卡选择
-	auto chooseGuan = MenuItemImage::create("select.png", "select2.png",
+	auto chooseGuan = MenuItemImage::create("select_guan.png", "select_guan2.png",
 		CC_CALLBACK_1(HelloWorld::menuChooseGuanCallback, this));
 	chooseGuan->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y - 1 * startItem->getContentSize().height));
 	//人物选择关
@@ -101,7 +104,8 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
 }
 
 void HelloWorld::menuStartCallback(Ref* pSender) {
-	auto scene = Help::createScene(1);
+	Help::setPass(1);
+	auto scene = Help::createScene();
 	auto gameScene = TransitionSlideInR::create(1.0f, scene);
 	Director::getInstance()->replaceScene(gameScene);
 }

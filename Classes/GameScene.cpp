@@ -4,6 +4,7 @@
 #include "Man_1.h"
 #include "Man_2.h"
 #include "Man_3.h"
+#include "Collision.h"
 #include <iostream>
 #include <string>
 
@@ -13,7 +14,7 @@ USING_NS_CC;
 
 Scene* GameScene::createScene()
 {
-	// 	//创建物理世界的场景
+	//创建物理世界的场景
 	auto scene = Scene::createWithPhysics();
 	auto layer = GameScene::create();
 	scene->addChild(layer);
@@ -30,26 +31,44 @@ bool GameScene::init()
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
+	//初始化数据
+	enemyList.clear();
+	items.clear();
+	bombs.clear();
+	bombs2.clear();
+	bloodListforPic.clear();
+	bloodList.clear();
+	directionList.clear();
+	changeOrNot.clear();
+
 	//初始化人物特征
 	mantype = HelloWorld::getTypeMan();
+	string man_name; //记录man的文件名
 	if (mantype == 1) {
 		manfu = Man_1();
 		man = Sprite::create("chooseman1.png");
+		man_name = "chooseman1.png";
 	}
 	else if (mantype == 2) {
 		manfu = Man_2();
 		man = Sprite::create("chooseman2.png");
+		man_name = "chooseman1.png";
 	}
 	else {
 		manfu = Man_3();
 		man = Sprite::create("chooseman3.png");
+		man_name = "chooseman1.png";
 	}
 	GameOverScene::win_num = 1;
 	useKey = 0;     //初始化useKey
 	score = 0;		//初始化Score
 	type = 0;       //初始化type
 	blood_for_man = manfu.getBlood();    //初始化血量
-
+	bombNum = 0; // 初始化大威力炸弹数量
+	totalTime = 100; // 初始化总时长
+	costTime = 0; // 初始化花去的时间
+	cs = 0;
+	xm = 0;
 
 	//背景精灵
 	auto bg1 = Sprite::create("background.jpg");
@@ -69,14 +88,23 @@ bool GameScene::init()
 	auto btn2 = MenuItemImage::create("boom2.png", "boom2.png", CC_CALLBACK_1(GameScene::setBomb2, this));
 	auto menu = Menu::create(btn1, btn2, NULL);
 	menu->alignItemsVerticallyWithPadding(30);
-	menu->setPosition(visibleSize.width - 50, 2*btn1->getContentSize().height);
+	menu->setAnchorPoint(Vec2(0, 0));
+	menu->setPosition(visibleSize.width - 150, btn1->getContentSize().height + 20);
 	this->addChild(menu, 1);
+
+	// 炸弹数量标记
+	bombCount = MenuItemImage::create("x0.png", "x0.png");
+	auto menu2 = Menu::create(bombCount, NULL);
+	menu2->setPosition(visibleSize.width - 50, 30);
+	menu2->setAnchorPoint(Vec2(0, 0));
+	this->addChild(menu2);
 	
-	//创建人物及设置物理碰撞
-	
+	//创建人物
 	man->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-	man->setTag(102);
-	auto manBody = PhysicsBody::createBox(man->getContentSize());
+	man->setTag(3);
+	man->setAnchorPoint(Vec2(0, 0));
+	sp_file.insert(pair<int, string>(102, man_name));
+	//auto manBody = PhysicsBody::createBox(man->getContentSize());
 	this->addChild(man, 5);
 
 	//定时调用移动函数
@@ -96,6 +124,8 @@ bool GameScene::init()
 
 	schedule(schedule_selector(GameScene::playerGo), 0.01f);
 
+	schedule(schedule_selector(GameScene::timeOut), 0.1f);
+
 	return true;
 }
 
@@ -105,6 +135,7 @@ void GameScene::onEnter()
 	Layer::onEnter();
 }
 
+//鱼的移动
 void GameScene::objectMove(float f) {
 	for (int i = 0; i < enemyList.size(); i++)
 	{
@@ -186,32 +217,37 @@ void GameScene::objectMove(float f) {
 		
 		if (blood == 1) {
 			if (changeOrNot[i] == 1) {
-				auto bloodBody1 = Sprite::create("blood_blue.png", CCRectMake(0, 0, 100, 12));
+				//auto bloodBody1 = Sprite::create("blood_blue.png", CCRectMake(0, 0, 100, 12));
 				bloodListforPic[i]->setScaleX(0.5);
 
 			}
-			bloodListforPic[i]->setPosition(Vec2(enemy->getPositionX(), enemy->getPositionY() + int(enemy->getContentSize().height / 2) + 1));
+			bloodListforPic[i]->setPosition(Vec2(enemy->getPositionX() + enemy->getContentSize().width / 2 - bloodListforPic[i]->getContentSize().width / 2, enemy->getPositionY() + int(enemy->getContentSize().height) + 1));
 		}
 		else if (blood == 2){
 			if (changeOrNot[i] == 1) {
-				auto bloodBody1 = Sprite::create("blood_blue.png", CCRectMake(0, 0, 200, 12));
+				//auto bloodBody1 = Sprite::create("blood_blue.png", CCRectMake(0, 0, 200, 12));
 				bloodListforPic[i]->setScaleX(0.66);
 			}
-			bloodListforPic[i]->setPosition(Vec2(enemy->getPositionX(), enemy->getPositionY() + int(enemy->getContentSize().height / 2) + 1));
+			bloodListforPic[i]->setPosition(Vec2(enemy->getPositionX() + enemy->getContentSize().width / 2 - bloodListforPic[i]->getContentSize().width / 2, enemy->getPositionY() + int(enemy->getContentSize().height) + 1));
 		}
 		else {
-			bloodListforPic[i]->setPosition(Vec2(enemy->getPositionX(), enemy->getPositionY() + int(enemy->getContentSize().height / 2) + 1));
+			bloodListforPic[i]->setPosition(Vec2(enemy->getPositionX() + enemy->getContentSize().width / 2 - bloodListforPic[i]->getContentSize().width / 2, enemy->getPositionY() + int(enemy->getContentSize().height) + 1));
 		}
 
 		changeOrNot[i] = 0;
-		if (enemy->getPositionX() < -(enemy->getContentSize().width + 100) || enemy->getPositionX() > (Director::getInstance()->getVisibleSize().width + enemy->getContentSize().width + 100)
-			||enemy->getPositionY() < -(enemy->getContentSize().height + 100) || enemy->getPositionY() > (Director::getInstance()->getVisibleSize().height + enemy->getContentSize().height + 100))
+		if (enemy->getPositionX() < -(enemy->getContentSize().width) || enemy->getPositionX() > (Director::getInstance()->getVisibleSize().width)
+			||enemy->getPositionY() < -(enemy->getContentSize().height) || enemy->getPositionY() > (Director::getInstance()->getVisibleSize().height))
 		{
 			enemy->removeFromParent();		//从层中移除
 			enemyList.eraseObject(enemy);	//把鱼从记录中移除
-
+			
 			bloodbody->removeFromParent();  //血条从层中移除
 			bloodListforPic.erase(bloodListforPic.begin()+i);//把血条从记录中移除
+
+			//更新数据
+			xm++;
+			auto scoreSpire = (Label *)this->getChildByTag(114);
+			scoreSpire->setString(String::createWithFormat("XM:%d", xm)->_string);
 
 			bloodList.erase(bloodList.begin()+i);   //把鱼对应的血量的记录移除
 			directionList.erase(directionList.begin()+i);   //把鱼对应的方向从记录中移除
@@ -219,7 +255,7 @@ void GameScene::objectMove(float f) {
 			i--;
 		}
 		else if (enemy->getTag() == 104) {		//判断是否和人碰撞且进行处理
-			if (inIt(enemy, man)) {
+			if (inIt(enemy, man, sp_file[104], sp_file[man->getTag()])) {
 				blood_for_man--;
 
 				if (blood_for_man <= 0) {
@@ -230,22 +266,38 @@ void GameScene::objectMove(float f) {
 				system->setPosition(enemy->getPositionX(), enemy->getPositionY());
 				this->addChild(system);
 
-				enemy->removeFromParent();		//从层中移除
+				this->removeChild(enemy);
+				//enemy->removeFromParent();		//从层中移除
 				enemyList.eraseObject(enemy);	//把鱼从记录中移除
-
-				bloodbody->removeFromParent();  //血条从层中移除
+				
+				//bloodbody->removeFromParent();  //血条从层中移除
+				this->removeChild(bloodbody);
 				bloodListforPic.erase(bloodListforPic.begin() + i);//把血条从记录中移除
+
+				bloodList.erase(bloodList.begin() + i);   //把鱼对应的血量的记录移除
+				directionList.erase(directionList.begin() + i);   //把鱼对应的方向从记录中移除
+
+				xm++;
+				auto scoreSpire1 = (Label *)this->getChildByTag(114);
+				scoreSpire1->setString(String::createWithFormat("XM:%d", xm)->_string);
 
 				//更新数据
 				auto scoreSpire = (Label *)this->getChildByTag(100);
 				scoreSpire->setString(String::createWithFormat("HP:%d", blood_for_man)->_string);
+
+				i--;
 			}
 		}
 	}
 }
 
+//鱼的创建
 void GameScene::enemyCreate(float f)
 {
+	if (enemyList.size() > 15) {
+		return;
+	}
+
 	string src;
 	int blood;
 	int director_;
@@ -266,42 +318,49 @@ void GameScene::enemyCreate(float f)
 		src = "fish3.png";
 		blood = 3;
 	}
-
+	//CCSprite * enemy;
 	auto enemy = Sprite::create(src);
 	if (src == "fish2.png") {
+		//enemy = CCSprite::createWithTexture(batchNode1->getTexture());
 		enemy->setTag(104);
+		sp_file.insert(pair<int, string>(104, "fish2.png"));
 	}
 	else if (src == "fish1.png") {
+		//enemy = CCSprite::createWithTexture(batchNode2->getTexture());
 		enemy->setTag(105);
+		sp_file.insert(pair<int, string>(105, "fish1.png"));
 	}
 	else {
+		//enemy = CCSprite::createWithTexture(batchNode3->getTexture());
 		enemy->setTag(106);
+		sp_file.insert(pair<int, string>(106, "fish3.png"));
 	}
-	//srand(time(NULL));
+	//设置锚点
+	enemy->setAnchorPoint(Vec2(0, 0));
 	director_ = rand() % 12;
 	if (director_ == 0) {
 		//在屏幕的最右边出现
-		enemy->setPosition(Vec2((Director::getInstance()->getVisibleSize().width + enemy->getContentSize().width), 
-			rand() % (int)(Director::getInstance()->getVisibleSize().height)));
+		enemy->setPosition(Vec2((Director::getInstance()->getVisibleSize().width), 
+			rand() % (int)(Director::getInstance()->getVisibleSize().height - enemy->getContentSize().height)));
 	}
 	else if (director_ == 1) {
 		//在屏幕的最左边出现
 		enemy->setPosition(Vec2((-enemy->getContentSize().width), 
-			rand() % (int)(Director::getInstance()->getVisibleSize().height)));
+			rand() % (int)(Director::getInstance()->getVisibleSize().height - enemy->getContentSize().height)));
 	}
 	else if (director_ == 2) {
 		//在屏幕的最上边出现
-		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width)),
+		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width - enemy->getContentSize().width)),
 			(Director::getInstance()->getVisibleSize().height + enemy->getContentSize().height)));
 	}
 	else if (director_ == 3){
 		//在屏幕的最下方出现
-		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width)),
+		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width - enemy->getContentSize().width)),
 			-enemy->getContentSize().height));
 	}
 	else if (director_ == 4) {
 		//在屏幕的右边的下方出现
-		enemy->setPosition(Vec2((Director::getInstance()->getVisibleSize().width + enemy->getContentSize().width),
+		enemy->setPosition(Vec2((Director::getInstance()->getVisibleSize().width),
 			rand() % (int)(Director::getInstance()->getVisibleSize().height / 2)));
 	}
 	else if (director_ == 5) {
@@ -311,29 +370,29 @@ void GameScene::enemyCreate(float f)
 	}
 	else if (director_ == 6) {
 		//在屏幕的右边的上方出现
-		enemy->setPosition(Vec2((Director::getInstance()->getVisibleSize().width + enemy->getContentSize().width),
-			rand() % (int)(Director::getInstance()->getVisibleSize().height / 2) +(int)(Director::getInstance()->getVisibleSize().height / 2)));
+		enemy->setPosition(Vec2((Director::getInstance()->getVisibleSize().width),
+			rand() % (int)(Director::getInstance()->getVisibleSize().height / 2) +(int)(Director::getInstance()->getVisibleSize().height / 2) - enemy->getContentSize().height));
 	}
 	else if (director_ == 7) {
 		//在屏幕的左边的上方出现
 		enemy->setPosition(Vec2((-enemy->getContentSize().width),
-			rand() % (int)(Director::getInstance()->getVisibleSize().height / 2) + (int)(Director::getInstance()->getVisibleSize().height / 2)));
+			rand() % (int)(Director::getInstance()->getVisibleSize().height / 2) + (int)(Director::getInstance()->getVisibleSize().height / 2) - enemy->getContentSize().height));
 
 	}
 	else if (director_ == 8) {
 		//在屏幕的上方的右边出现
-		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width / 2) + (int)(Director::getInstance()->getVisibleSize().width / 2)),
-			(Director::getInstance()->getVisibleSize().height + enemy->getContentSize().height)));
+		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width / 2) + (int)(Director::getInstance()->getVisibleSize().width / 2) - enemy->getContentSize().width),
+			(Director::getInstance()->getVisibleSize().height)));
 	}
 	else if (director_ == 9) {
 		//在屏幕的上方的左边出现
 		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width / 2)),
-			(Director::getInstance()->getVisibleSize().height + enemy->getContentSize().height)));
+			(Director::getInstance()->getVisibleSize().height)));
 
 	}
 	else if (director_ == 10) {
 		//在屏幕的下方的右边出现
-		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width / 2) + (int)(Director::getInstance()->getVisibleSize().width / 2)),
+		enemy->setPosition(Vec2((rand() % (int)(Director::getInstance()->getVisibleSize().width / 2) + (int)(Director::getInstance()->getVisibleSize().width / 2) - enemy->getContentSize().width),
 			-enemy->getContentSize().height));
 	}
 	else {
@@ -342,36 +401,35 @@ void GameScene::enemyCreate(float f)
 			-enemy->getContentSize().height));
 
 	}
-	if (temp == 0) {
-		auto enemyBody = PhysicsBody::createBox(enemy->getContentSize());
-		enemyBody->setContactTestBitmask(0x0003);
-		enemyBody->setCategoryBitmask(0x0002);
-		enemyBody->setCollisionBitmask(0x0001);
-		enemyBody->setGravityEnable(false);
-		enemy->setPhysicsBody(enemyBody);
-	}
-	this->addChild(enemy);
+
+	this->addChild(enemy, 2);
 	this->enemyList.pushBack(enemy);
 	this->bloodList.push_back(blood);
 	this->directionList.push_back(director_);
 	this->changeOrNot.push_back(0);
+	
+	cs++;
+	//更新数据
+	auto scoreSpire = (Label *)this->getChildByTag(113);
+	scoreSpire->setString(String::createWithFormat("CS:%d", cs)->_string);
 
 	int x1, y1;
 	if (enemy->getTag() == 104) {
-		x1 = 100;
+		x1 = 80;
 		y1 = 12;
 	}
 	else if (enemy->getTag() == 105) {
-		x1 = 200;
+		x1 = 160;
 		y1 = 12;
 	}
 	else if (enemy->getTag() == 106) {
-		x1 = 300;
+		x1 = 240;
 		y1 = 12;
 	}
 	auto bloodBody = Sprite::create("blood_blue.png", CCRectMake(0,0,x1,y1));
-	//bloodBody->setPosition(Vec2(enemy->getPositionX(), enemy->getPositionY() + enemy->getContentSize().height + 50));
-	this->addChild(bloodBody);
+	bloodBody->setAnchorPoint(Vec2(0, 0));
+	bloodBody->setPosition(Vec2(enemy->getPositionX() + enemy->getContentSize().width / 2 - bloodBody->getContentSize().width / 2, enemy->getPositionY() + int(enemy->getContentSize().height) + 1));
+	this->addChild(bloodBody, 3);
 	this->bloodListforPic.push_back(bloodBody);
 }
 
@@ -388,33 +446,65 @@ bool GameScene::onTouchBegan(Touch *touch, Event *unused_event)
 
 void GameScene::setBomb(Ref* ref)
 {
-	if (bombs.size() < 4) {
+	if (bombs.size() < 1) {
 		bomb = Sprite::create("boom.png");
 		bomb->setTag(1);
+		sp_file.insert(pair<int, string>(1, "boom.png"));
 		bomb->setPosition(man->getPosition());
-		bomb->setAnchorPoint(Vec2(0.5, 0.5));
-		this->addChild(bomb, 1);
-		bombs.push_back(bomb);
-	}
-
-	schedule(schedule_selector(GameScene::eraseBomb), 0.2f);
-}
-
-void GameScene::setBomb2(Ref* ref)
-{
-	if (bombs.size() < 4) {
-		bomb = Sprite::create("boom2.png");
-		bomb->setTag(2);
-		bomb->setPosition(man->getPosition());
-		bomb->setAnchorPoint(Vec2(0.5, 0.5));
+		bomb->setAnchorPoint(Vec2(0, 0));
 		this->addChild(bomb, 1);
 		bombs.push_back(bomb);
 	}
 
 	schedule(schedule_selector(GameScene::eraseBomb), 0.5f);
-
 }
 
+void GameScene::setBomb2(Ref* ref)
+{
+	// 需要足够的炸弹道具数量
+	if (bombNum <= 0)
+		return;
+
+	if (bombs.size() < 1) {
+		bomb = Sprite::create("boom2.png");
+		bomb->setTag(2);
+		sp_file.insert(pair<int, string>(2, "boom2.png"));
+		bomb->setPosition(man->getPosition());
+		bomb->setAnchorPoint(Vec2(0, 0));
+		this->addChild(bomb, 1);
+		bombs2.push_back(bomb);
+
+		// 用掉一个炸弹
+		bombNum--;
+
+		if (bombNum == 0)
+			bombCount->setNormalImage(Sprite::create("x0.png"));
+		else if (bombNum == 1)
+			bombCount->setNormalImage(Sprite::create("x1.png"));
+		else if (bombNum == 2)
+			bombCount->setNormalImage(Sprite::create("x2.png"));
+		else if (bombNum == 3)
+			bombCount->setNormalImage(Sprite::create("x3.png"));
+		else if (bombNum == 4)
+			bombCount->setNormalImage(Sprite::create("x4.png"));
+		else if (bombNum == 5)
+			bombCount->setNormalImage(Sprite::create("x5.png"));
+		else if (bombNum == 6)
+			bombCount->setNormalImage(Sprite::create("x6.png"));
+		else if (bombNum == 7)
+			bombCount->setNormalImage(Sprite::create("x7.png"));
+		else if (bombNum == 8)
+			bombCount->setNormalImage(Sprite::create("x8.png"));
+		else if (bombNum == 9)
+			bombCount->setNormalImage(Sprite::create("x9.png"));
+		else 
+			bombCount->setNormalImage(Sprite::create("x10.png"));
+	}
+
+	schedule(schedule_selector(GameScene::eraseBomb2), 0.8f);
+
+}
+//炸弹效果
 void GameScene::eraseBomb(float t)
 {
 	vector<Sprite*>::iterator i = bombs.begin();
@@ -444,9 +534,33 @@ void GameScene::eraseBomb(float t)
 			}
 
 			type = 1;
-			BombAndFish();
+			BombAndFish(1);
 		}
-		else if ((*i)->getTag() == 2)
+		(*i)->removeFromParent();
+		//this->removeChild(*i);
+		bombs.erase(i);
+	}
+
+	if (bombs.empty())
+	{
+		unschedule(schedule_selector(GameScene::eraseBomb));
+	}
+}
+
+//炸弹效果
+void GameScene::eraseBomb2(float t)
+{
+	vector<Sprite*>::iterator i = bombs2.begin();
+
+	Size bombSize = (*i)->getContentSize();
+
+	if (!bombs2.empty())
+	{
+		Vec2 pos = (*i)->getPosition();
+		curx = pos.x;
+		cury = pos.y;
+
+		if ((*i)->getTag() == 2)
 		{
 			Sprite* temp[25];
 			int count = 0;
@@ -462,31 +576,35 @@ void GameScene::eraseBomb(float t)
 				}
 			}
 			type = 2;
-			BombAndFish();
-
+			BombAndFish(2);
 		}
-
-		this->removeChild(*i);
-		bombs.erase(i);
+		(*i)->removeFromParent();
+		//this->removeChild(*i);
+		bombs2.erase(i);
 	}
 
-	if (bombs.empty())
+	if (bombs2.empty())
 	{
-		unschedule(schedule_selector(GameScene::eraseBomb));
+		unschedule(schedule_selector(GameScene::eraseBomb2));
 	}
 }
 
-void GameScene::BombAndFish() {
+//检测鱼和炸弹的碰撞
+void GameScene::BombAndFish(int ty) {
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	for (int i = 0; i < enemyList.size(); i++)
 	{
 		auto enemy = enemyList.at(i);
 		auto bloodbody = bloodListforPic.at(i);
 
-		Size bombSize = bombs[0]->getContentSize();
+		Size bombSize;
+		if (ty == 1)
+			bombSize = bombs[0]->getContentSize();
+		else if (ty == 2)
+			bombSize = bombs2[0]->getContentSize();
 
-		int x = enemy->getPositionX();
-		int y = enemy->getPositionY();
+		int x = enemy->getPositionX() + enemy->getContentSize().width / 2;
+		int y = enemy->getPositionY() + enemy->getContentSize().height / 2;
 		int xwidth = enemy->getPositionX() + enemy->getContentSize().width;
 		int yheight = enemy->getPositionY() + enemy->getContentSize().height;
 
@@ -494,28 +612,33 @@ void GameScene::BombAndFish() {
 			int xmin, xmax, ymin, ymax;
 			//获取炸弹x轴的范围
 			xmin = max(int(curx - bombSize.width), 0);
-			xmax = min(int(curx + 2*bombSize.width), int(visibleSize.width));
+			xmax = min(int(curx + 2 * bombSize.width), int(visibleSize.width));
 			//获取炸弹y轴的范围
 			ymin = max(int(cury - bombSize.height), 0);
-			ymax = min(int(cury + 2*bombSize.height), int(visibleSize.height));
+			ymax = min(int(cury + 2 * bombSize.height), int(visibleSize.height));
 
-			int wid = (xmax - xmin) / 6;
-			int hei = (ymax - ymin) / 6;
+			//int wid = (xmax - xmin) / 6;
+			//int hei = (ymax - ymin) / 6;
 
+			if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
+				bloodList[i] -= manfu.getPower();
+				changeOrNot[i] = 1;
+			}
+			/*
 			if ((x >= curx - wid && x <= curx + wid && y <= ymax && y >= ymin) ||
 				(x >= xmin && x <= xmax && y >= cury - hei && y <= cury + hei)) {
 				bloodList[i] -= manfu.getPower();
 				changeOrNot[i] = 1;
-			}
+			}*/
 		}
 		else if (type == 2) {
 			int xmin, xmax, ymin, ymax;
 			//获取炸弹x轴的范围
-			xmin = max(int(curx - 2*bombSize.width), 0);
-			xmax = min(int(curx + 3*bombSize.width), int(visibleSize.width));
+			xmin = max(int(curx - 2 * bombSize.width), 0);
+			xmax = min(int(curx + 3 * bombSize.width), int(visibleSize.width));
 			//获取炸弹y轴的范围
-			ymin = max(int(cury - 2*bombSize.height), 0);
-			ymax = min(int(cury + 3*bombSize.height), int(visibleSize.height));
+			ymin = max(int(cury - 2 * bombSize.height), 0);
+			ymax = min(int(cury + 3 * bombSize.height), int(visibleSize.height));
 
 			if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
 				bloodList[i] -= manfu.getPower();
@@ -659,6 +782,7 @@ void GameScene::setItem(Sprite* enemy) {
 			item->setPosition(enemy->getPosition());
 			this->addChild(item, 5);
 			item->setTag(14);
+			sp_file.insert(pair<int, string>(14, "dropbomb2.png"));
 			items.push_back(item);
 		}
 	}
@@ -669,6 +793,7 @@ void GameScene::setItem(Sprite* enemy) {
 			item->setPosition(enemy->getPosition());
 			this->addChild(item, 5);
 			item->setTag(15);
+			sp_file.insert(pair<int, string>(15, "hp.png"));
 			items.push_back(item);
 		}
 	}
@@ -679,6 +804,7 @@ void GameScene::setItem(Sprite* enemy) {
 			item->setPosition(enemy->getPosition());
 			this->addChild(item, 5);
 			item->setTag(14);
+			sp_file.insert(pair<int, string>(14, "dropbomb2.png"));
 			items.push_back(item);
 		}
 	}
@@ -689,16 +815,44 @@ void GameScene::setItem(Sprite* enemy) {
 void GameScene::eraseItem()
 {
 	for (vector<Sprite*>::iterator it = items.begin(); it != items.end();) {
-		if (inIt(*it, man)) {
+		if (inIt(*it, man, sp_file[(*it)->getTag()], sp_file[man->getTag()])) {
 			if ((*it)->getTag() == 15) {
 				blood_for_man += 1;
+
+				//更新数据
+				auto scoreSpire = (Label *)this->getChildByTag(100);
+				scoreSpire->setString(String::createWithFormat("HP:%d", blood_for_man)->_string);
 			}
 			else if ((*it)->getTag() == 14) {
-				bombNum += 1;
+				if (bombNum <= 4)
+					bombNum++;
+
+				if (bombNum == 0)
+					bombCount->setNormalImage(Sprite::create("x0.png"));
+				else if (bombNum == 1)
+					bombCount->setNormalImage(Sprite::create("x1.png"));
+				else if (bombNum == 2)
+					bombCount->setNormalImage(Sprite::create("x2.png"));
+				else if (bombNum == 3)
+					bombCount->setNormalImage(Sprite::create("x3.png"));
+				else if (bombNum == 4)
+					bombCount->setNormalImage(Sprite::create("x4.png"));
+				else if (bombNum == 5)
+					bombCount->setNormalImage(Sprite::create("x5.png"));
+				else if (bombNum == 6)
+					bombCount->setNormalImage(Sprite::create("x6.png"));
+				else if (bombNum == 7)
+					bombCount->setNormalImage(Sprite::create("x7.png"));
+				else if (bombNum == 8)
+					bombCount->setNormalImage(Sprite::create("x8.png"));
+				else if (bombNum == 9)
+					bombCount->setNormalImage(Sprite::create("x9.png"));
+				else
+					bombCount->setNormalImage(Sprite::create("x10.png"));
+
 			}
 			this->removeChild(*it);
 			it = items.erase(it);
-
 		}
 		else {
 			++it;
@@ -706,36 +860,33 @@ void GameScene::eraseItem()
 	}
 }
 
-bool GameScene::inIt(Node* node1, Node* node2) {
+//碰撞检测
+bool GameScene::inIt(Node* node1, Node* node2, string src1, string src2) {
 	Point a = node2->getPosition();
-	//左下角顶点
-	if (isIn(node1, a)) {
-		return true;
-	}
-	//右下角顶点
-	Point a1 = Vec2(a.x + node2->getContentSize().width, a.y);
-	if (isIn(node1, a1)) {
-		return true;
-	}
-	//左上角顶点
-	Point a2 = Vec2(a.x, a.y + node2->getContentSize().height);
-	if (isIn(node1, a2)) {
-		return true;
-	}
-	//右上角顶点
-	Point a3 = Vec2(a.x + node2->getContentSize().width, a.y + node2->getContentSize().height);
-	if (isIn(node1, a3)) {
-		return true;
-	}
+	Point b = node1->getPosition();
 
-	return false;
-}
+	Collision col1 = Collision();
+	Collision col2 = Collision();
 
-bool GameScene::isIn(Node* node1, Point a) {
-	if (a.x > node1->getPositionX() && a.x < node1->getPositionX() + node1->getContentSize().width
-		&& a.y > node1->getPositionY() && a.y < node1->getPositionY() + node1->getContentSize().height) {
-		return true;
+	col1.setThePlex(src1);
+	col2.setThePlex(src2);
+
+	for (int x = a.x; x < a.x + node2->getContentSize().width; x++) {
+		for (int y = a.y; y < a.y + node2->getContentSize().height; y++) {
+			if (x > node1->getPositionX() && x < node1->getPositionX() + node1->getContentSize().width
+				&& y > node1->getPositionY() && y < node1->getPositionY() + node1->getContentSize().height) {
+				int xy = col1.getThePlexByPoint(x - b.x, y - b.y) * col2.getThePlexByPoint(x - a.x, y - a.y);
+				if (xy != 0) {
+					delete col1.plex_t;
+					delete col2.plex_t;
+					return true;
+				}
+			}
+		}
 	}
+	delete col1.plex_t;
+	delete col2.plex_t;
+
 	return false;
 }
 
@@ -762,6 +913,30 @@ void GameScene::createLabel() {
 	label2->setHorizontalAlignment(kCCTextAlignmentRight);
 	label2->setAnchorPoint(Vec2(0, 0.5));
 	this->addChild(label2, 1);
+
+	// 显示时间
+	auto label3 = cocos2d::Label::createWithSystemFont("Time:10.0", "Arial", 24);
+	label3->setTag(112);
+	label3->setPosition(Vec2(0, visibleSize.height - 3 * label2->getContentSize().height));
+	label3->setHorizontalAlignment(kCCTextAlignmentRight);
+	label3->setAnchorPoint(Vec2(0, 0.5));
+	this->addChild(label3, 1);
+
+	// 显示产生的鱼的个数
+	auto label4 = cocos2d::Label::createWithSystemFont("CS：0", "Arial", 24);
+	label4->setTag(113);
+	label4->setPosition(Vec2(0, visibleSize.height - 4 * label2->getContentSize().height));
+	label4->setHorizontalAlignment(kCCTextAlignmentRight);
+	label4->setAnchorPoint(Vec2(0, 0.5));
+	this->addChild(label4, 1);
+
+	//消灭的
+	auto label5 = cocos2d::Label::createWithSystemFont("XM:0", "Arial", 24);
+	label5->setTag(114);
+	label5->setPosition(Vec2(0, visibleSize.height - 5 * label2->getContentSize().height));
+	label5->setHorizontalAlignment(kCCTextAlignmentRight);
+	label5->setAnchorPoint(Vec2(0, 0.5));
+	this->addChild(label5, 1);
 }
 
 //游戏结束
@@ -769,6 +944,7 @@ void GameScene::gameOver() {
 	GameOverScene::win_num = 0;
 	auto scene = GameOverScene::createScene();
 	auto gameOverScene = TransitionTurnOffTiles::create(1.0f, scene);
+	CCTextureCache::sharedTextureCache()->removeAllTextures();
 	Director::getInstance()->replaceScene(gameOverScene);
 }
 
@@ -776,9 +952,28 @@ void GameScene::gameOver() {
 void GameScene::win() {
 	auto scene = GameOverScene::createScene();
 	auto gameOverScene = TransitionTurnOffTiles::create(1.0f, scene);
+	CCTextureCache::sharedTextureCache()->removeAllTextures();
 	Director::getInstance()->replaceScene(gameOverScene);
 }
 
+// 超时失败
+void GameScene::timeOut(float t) {
+	costTime += t;
+
+	// 更新时间
+	auto leftTimeLabel = (Label *)this->getChildByTag(112);
+	float leftTime = totalTime - costTime;
+	if (leftTime < 0)
+		leftTime = 0;
+	leftTimeLabel->setString(String::createWithFormat("Time:%.1f", leftTime)->_string);
+
+	if (costTime >= totalTime) {
+		unscheduleAllSelectors();
+		GameOverScene::win_num = 0;
+		gameOver();
+	}
+
+}
 //停止所有的定时器
 void GameScene::stopAllSchedule()
 {

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 USING_NS_CC;
 using namespace std;
@@ -21,6 +22,20 @@ public:
 	int cury;
 	int type;
 
+	int cs;
+	int xm;
+
+	// 标记大威力炸弹数量
+	MenuItemImage* bombCount;
+
+	// 总时间
+	float totalTime;
+	// 花去的时间
+	float costTime;
+
+	//存储与精灵对应的文件名,只记录一些重要的
+	map<int, string>sp_file;
+
 	//人物类型
 	int mantype;
 	//人物特征
@@ -30,6 +45,7 @@ public:
 	//炸弹
 	Sprite *bomb;
 	vector<Sprite*> bombs;
+	vector<Sprite*> bombs2;
 	//道具
 	Sprite *item;
 	vector<Sprite*> items;
@@ -66,6 +82,7 @@ public:
 	void setBomb(Ref* ref);
 	void setBomb2(Ref* ref);
 	void eraseBomb(float t);
+	void eraseBomb2(float t);
 	
 	//让鱼游动
 	void objectMove(float f);
@@ -73,7 +90,7 @@ public:
 	void enemyCreate(float f);
 
 	//鱼与炸弹的幸福生活
-	void BombAndFish();
+	void BombAndFish(int i);
 
 	//创建文本显示
 	void createLabel();
@@ -82,13 +99,16 @@ public:
 	void stopAllSchedule();
 
 	//判断是否碰撞
-	bool inIt(Node* node1, Node* node2);
-	bool isIn(Node* node1, Point a);
+	bool inIt(Node* node1, Node* node2, string src1, string src2);
+	//bool isIn(Node* node1, Point a);
 
 	// 设置道具
 	void setItem(Sprite* enemy);
 	// 道具消除
 	void eraseItem();
+
+	// 超时游戏失败
+	void timeOut(float t);
 
 	//游戏结束
 	void gameOver();

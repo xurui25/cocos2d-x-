@@ -1,18 +1,22 @@
-#ifndef __GAME_SCENE3_H__
-#define __GAME_SCENE3_H__
+#ifndef __GAMESCENE3_H__
+#define __GAMESCENE3_H__
 
 #include "cocos2d.h"
-#include "GameScene.h"
+#include "GameScene2.h"
 
-class GameScene3 :public GameScene {
+class GameScene3 :public GameScene2 {
 public:
-	static cocos2d::Scene* createScene();
+	Vector<Sprite*>waterlist;
+	vector<int>waterdis;
+	int speed_for_water;
 
+	static cocos2d::Scene* createScene();
 	virtual bool init();
 	CREATE_FUNC(GameScene3);
 
-	void setBomb(Ref* ref);
-	void setBomb2(Ref* ref);
-	void BombsMove3(float f);
+	void createWater();
+	void WaterMove(float f);
+
+	void MoveAction(Sprite *sp, int dis);
 };
 #endif

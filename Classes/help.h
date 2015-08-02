@@ -7,7 +7,7 @@ USING_NS_CC;
 class Help :public cocos2d::Layer {
 public:
 	
-	static cocos2d::Scene* createScene(int i);
+	static cocos2d::Scene* createScene();
 	virtual bool init();
 	
 	//»Øµ÷º¯Êý
