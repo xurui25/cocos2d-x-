@@ -6,10 +6,16 @@
 #include "Man_3.h"
 #include <iostream>
 #include <string>
+#include "SimpleAudioEngine.h"
+
+
+using namespace CocosDenshion;
 
 #pragma execution_character_set("utf-8")
 
 USING_NS_CC;
+
+int GameScene2::bombnum = 1;
 
 Scene* GameScene2::createScene()
 {
@@ -64,8 +70,18 @@ bool GameScene2::init()
 	bombNum = 0; // 初始化大威力炸弹数量
 	totalTime = 100; // 初始化总时长
 	costTime = 0; // 初始化花去的时间
+	bombnum = 1; //初始化炸弹可以出现的数量
 	cs = 0;
 	xm = 0;
+	isPause = false;
+	useBgm = true;
+
+
+	// 预载入音乐、音效
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bgm.mp3");
+	SimpleAudioEngine::getInstance()->preloadEffect("music/boom.mp3");
+	// 播放背景音乐
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bgm.mp3", true);
 
 	//背景精灵
 	auto bg1 = Sprite::create("background.jpg");
@@ -88,6 +104,18 @@ bool GameScene2::init()
 	menu->setAnchorPoint(Vec2(0, 0));
 	menu->setPosition(visibleSize.width - 150, btn1->getContentSize().height + 20);
 	this->addChild(menu, 1);
+	
+	//预先将鱼的图片纹理存起来
+	spriteTexture1 = CCSpriteBatchNode::create("fish2.png");
+	spriteTexture1->setPosition(Vec2(0, 0));
+	addChild(spriteTexture1, 2);
+	spriteTexture2 = CCSpriteBatchNode::create("fish1.png");
+	spriteTexture2->setPosition(Vec2(0, 0));
+	addChild(spriteTexture2, 2);
+	spriteTexture3 = CCSpriteBatchNode::create("fish3.png");
+	spriteTexture3->setPosition(Vec2(0, 0));
+	addChild(spriteTexture3, 2);
+
 
 	// 炸弹数量标记
 	bombCount = MenuItemImage::create("x0.png", "x0.png");
@@ -95,6 +123,16 @@ bool GameScene2::init()
 	menu2->setPosition(visibleSize.width - 50, 30);
 	menu2->setAnchorPoint(Vec2(0, 0));
 	this->addChild(menu2);
+
+	// 创建暂停按钮,返回按钮和控制音乐按钮.
+	auto btn3 = MenuItemImage::create("continue.png", "continue2.png", CC_CALLBACK_0(GameScene::pauseGame, this));
+	auto btn4 = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_0(GameScene::goHomePage, this));
+	auto btn5 = MenuItemImage::create("select_guan.png", "select_guan.png", CC_CALLBACK_0(GameScene::soundUsing, this));
+	auto menu3 = Menu::create(btn3, btn4, btn5, NULL);
+	menu3->alignItemsVerticallyWithPadding(30);
+	menu3->setAnchorPoint(Vec2(0, 0));
+	menu3->setPosition(visibleSize.width - 100, 500);
+	this->addChild(menu3, 1);
 
 	//创建人物及设置物理碰撞
 	man = Sprite::create("man1.png");
@@ -127,7 +165,7 @@ bool GameScene2::init()
 }
 
 void GameScene2::setBomb(Ref* ref) {
-	if (bombs.size() < 1) {
+	if (bombs.size() < bombnum) {
 		bomb = Sprite::create("boom.png");
 		bomb->setTag(1);
 		sp_file.insert(pair<int, string>(1, "boom.png"));
@@ -148,7 +186,7 @@ void GameScene2::setBomb2(Ref* ref)
 	if (bombNum <= 0)
 		return;
 
-	if (bombs.size() < 1) {
+	if (bombs.size() < bombnum) {
 		bomb = Sprite::create("boom2.png");
 		bomb->setTag(2);
 		sp_file.insert(pair<int, string>(2, "boom2.png"));

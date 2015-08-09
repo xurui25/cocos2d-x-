@@ -128,6 +128,12 @@ void GameOverScene::nextGame(Ref* pSender) {
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}
+	else if (win_num == 8) {
+		Help::setPass(5);
+		auto scene = Help::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
 }
 
 //第二关

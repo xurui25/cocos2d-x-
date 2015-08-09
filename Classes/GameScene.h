@@ -25,8 +25,17 @@ public:
 	int cs;
 	int xm;
 
+	CCSpriteBatchNode* spriteTexture1;
+	CCSpriteBatchNode* spriteTexture2;
+	CCSpriteBatchNode* spriteTexture3;
 	// 标记大威力炸弹数量
 	MenuItemImage* bombCount;
+
+	// 是否正暂停
+	bool isPause;
+
+	// 是否使用音乐音效
+	bool useBgm;
 
 	// 总时间
 	float totalTime;
@@ -113,5 +122,14 @@ public:
 	//游戏结束
 	void gameOver();
 	void win();
+
+	// 返回主页面
+	void goHomePage();
+
+	// 暂停
+	void pauseGame();
+
+	// 关闭音乐音效
+	void soundUsing();
 };
 #endif // __GAME_SCENE_H__

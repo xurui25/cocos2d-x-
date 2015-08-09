@@ -19,8 +19,6 @@ public:
 	void setBomb2(Ref* ref);
 	void BombsMove(float f);
 
-	//ÓÎÏ·½áÊø
-	//void gameOver();
-	//void win();
+	static int bombnum;
 };
 #endif

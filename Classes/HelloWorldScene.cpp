@@ -6,6 +6,10 @@
 #include "cocostudio/CocoStudio.h"
 #include "help.h"
 #include "Collision.h"
+#include "SimpleAudioEngine.h"
+
+
+using namespace CocosDenshion;
 
 USING_NS_CC;
 using namespace cocostudio;
@@ -34,6 +38,12 @@ bool HelloWorld::init()
 
     Size visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+	// Ô¤ÔØÈëÒôÀÖ¡¢ÒôÐ§
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/helloBgm.mp3");
+	//SimpleAudioEngine::getInstance()->preloadEffect("music/boom.mp3");
+	// ²¥·Å±³¾°ÒôÀÖ
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/helloBgm.mp3", true);
 
 	//±³¾°¾«Áé
 	auto bg1 = Sprite::create("background.jpg");

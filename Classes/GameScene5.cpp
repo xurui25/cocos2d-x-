@@ -1,4 +1,4 @@
-#include "GameScene3.h"
+#include "GameScene5.h"
 #include "HelloWorldScene.h"
 #include "GameOverScene.h"
 #include "Man_1.h"
@@ -12,14 +12,14 @@ using namespace CocosDenshion;
 
 USING_NS_CC;
 
-Scene* GameScene3::createScene() {
+Scene* GameScene5::createScene() {
 	auto scene = Scene::createWithPhysics();
-	auto layer = GameScene3::create();
+	auto layer = GameScene5::create();
 	scene->addChild(layer);
 	return scene;
 }
 
-bool GameScene3::init() {
+bool GameScene5::init() {
 	if (!Layer::init()) {
 		return false;
 	}
@@ -48,20 +48,19 @@ bool GameScene3::init() {
 	else if (mantype == 2) {
 		manfu = Man_2();
 		man = Sprite::create("chooseman2.png");
-		man_name = "chooseman2.png";
+		man_name = "chooseman1.png";
 	}
 	else {
 		manfu = Man_3();
 		man = Sprite::create("chooseman3.png");
-		man_name = "chooseman3.png";
+		man_name = "chooseman1.png";
 	}
-	GameOverScene::win_num = 5;
-	//manfu.setSpeed(manfu.getSpeed() * 4);
+	GameOverScene::win_num = 9;
 	useKey = 0;     //初始化useKey
 	score = 0;		//初始化Score
 	type = 0;       //初始化type
 	blood_for_man = manfu.getBlood();    //初始化血量
-	speed_for_water = 3;  //初始化水流速度
+	speed_for_water = 4;  //初始化水流速度
 	bombNum = 0; // 初始化大威力炸弹数量
 	totalTime = 100; // 初始化总时长
 	costTime = 0; // 初始化花去的时间
@@ -90,6 +89,8 @@ bool GameScene3::init() {
 
 	//创建Label
 	createLabel();
+
+	//创建水流
 	createWater();
 
 	//创建炸弹按钮
@@ -134,11 +135,22 @@ bool GameScene3::init() {
 	man->setPosition(visibleSize.width / 2, visibleSize.height / 2);
 	man->setTag(3);
 	man->setAnchorPoint(Vec2(0, 0));
-	sp_file.insert(pair<int, string>(102, man_name));
+	sp_file.insert(pair<int, string>(3, man_name));
 	this->addChild(man, 5);
 
+	//显示炸弹
+	auto label6 = cocos2d::Label::createWithSystemFont("NUM:1", "Arial", 24);
+	label6->setTag(117);
+	label6->setPosition(Vec2(0, visibleSize.height - 6 * label6->getContentSize().height));
+	label6->setHorizontalAlignment(kCCTextAlignmentRight);
+	label6->setAnchorPoint(Vec2(0, 0.5));
+	this->addChild(label6, 1);
+
+	//创建机器人
+	createMachine();
+
 	//定时调用移动函数
-	this->schedule(schedule_selector(GameScene::objectMove), 0.01);
+	this->schedule(schedule_selector(GameScene4::objectMove), 0.01);
 
 	//定时创建鱼
 	this->schedule(schedule_selector(GameScene::enemyCreate), 0.5);
@@ -157,87 +169,111 @@ bool GameScene3::init() {
 
 	schedule(schedule_selector(GameScene::timeOut), 0.1f);
 
-	schedule(schedule_selector(GameScene::playerGo), 0.01f);
+	schedule(schedule_selector(GameScene5::playerGo), 0.01f);
+
+	schedule(schedule_selector(GameScene5::MachineMove), 0.5f);
+
+	schedule(schedule_selector(GameScene5::MachineBomb), 0.5f);
 
 	return true;
 }
 
-void GameScene3::createWater() {
-	Size visibleSize = Director::getInstance()->getVisibleSize();
-	Vec2 origin = Director::getInstance()->getVisibleOrigin();
-    
-	auto water = Sprite::create("bg1_1.png");
-	water->setTag(6);
-	water->setAnchorPoint(Vec2(0, 0));
-	water->setPosition(Vec2(visibleSize.width / 2, 0));
-	sp_file.insert(pair<int, string>(6, "bg1_1.png"));
-	waterlist.pushBack(water);
-	this->addChild(water, 1);
-
-	int dis = 1;
-	waterdis.push_back(dis);
+//创建机器人
+void GameScene5::createMachine() {
+	Machine = Sprite::create("Machine.png");
+	Machine->setPosition(man->getPositionX() - man->getContentSize().width, man->getPositionY());
+	Machine->setTag(6);
+	Machine->setAnchorPoint(Vec2(0, 0));
+	sp_file.insert(pair<int, string>(6, "Machine.png"));
+	this->addChild(Machine, 5);
 }
 
-void GameScene3::WaterMove(float f) {
-	for (int j = 0; j < waterlist.size(); j++) {
-		auto water = waterlist.at(j);
-		int waterd = waterdis.at(j);
-		//判断炸弹在不在水流中
-		for (int i = 0; i < bombs.size(); i++) {
-			auto sp = bombs.at(i);
-			
-			if (GameScene::inIt(water, sp, sp_file[water->getTag()], sp_file[sp->getTag()])) {
-				MoveAction(sp, waterd);
-			}
-		}
-
-		//判断人物在不在水流中
-		if (GameScene::inIt(water, man, sp_file[water->getTag()], sp_file[man->getTag()])) {
-			MoveAction(man, waterd);
-		}
+//机器人的移动
+void GameScene5::MachineMove(float f) {
+	if (Machine->getPositionX() < man->getPositionX() && Machine->getPositionY() <= man->getPositionY()) {
+		Machine->setPosition(Vec2(Machine->getPositionX(), Machine->getPositionY() + man->getContentSize().height));
+	}
+	else if (Machine->getPositionX() <= man->getPositionX() && Machine->getPositionY() > man->getPositionY()) {
+		Machine->setPosition(Vec2(Machine->getPositionX() + man->getContentSize().width, Machine->getPositionY()));
+	}
+	else if (Machine->getPositionX() > man->getPositionX() && Machine->getPositionY() >= man->getPositionY()) {
+		Machine->setPosition(Vec2(Machine->getPositionX(), Machine->getPositionY() - man->getContentSize().height));
+	}
+	else if (Machine->getPositionX() >= man->getPositionX() && Machine->getPositionY() < man->getPositionY()) {
+		Machine->setPosition(Vec2(Machine->getPositionX() - man->getContentSize().width, Machine->getPositionY()));
 	}
 }
 
-void GameScene3::MoveAction(Sprite* sp, int waterd) {
-	//水流向上
-	if (waterd == 1) {
-		if (sp->getPositionY() < Director::getInstance()->getVisibleSize().height) {
-			sp->setPositionY(sp->getPositionY() + speed_for_water);
+//人物及其机器人的移动
+void GameScene5::playerGo(float t)
+{
+	if (useKey == 1)
+	{
+		if (man->getPositionY() < Director::getInstance()->getVisibleSize().height) {
+			MoveBy *move = MoveBy::create(0.01f, Vec2(0, manfu.getSpeed()));
+			auto callfunc = CallFunc::create(this, callfunc_selector(GameScene::eraseItem));
+			man->runAction(Sequence::create(move, callfunc, NULL));
+			//Machine->runAction(Sequence::create(move, NULL));
 		}
 	}
-	else if (waterd == 2) { //水流向下
-		if (sp->getPositionY() > 0) {
-			sp->setPositionY(sp->getPositionY() - speed_for_water);
+
+	else if (useKey == 2)
+	{
+		if (man->getPositionY() > 0) {
+			MoveBy *move = MoveBy::create(0.01f, Vec2(0, -manfu.getSpeed()));
+			auto callfunc = CallFunc::create(this, callfunc_selector(GameScene::eraseItem));
+			man->runAction(Sequence::create(move, callfunc, NULL));
+			//Machine->runAction(Sequence::create(move, NULL));
 		}
 	}
-	else if (waterd == 3) { //水流向左
-		if (sp->getPositionX() > 0) {
-			sp->setPositionX(sp->getPositionX() - speed_for_water);
+	else if (useKey == 3)
+	{
+		if (man->getPositionX() < Director::getInstance()->getVisibleSize().width) {
+			MoveBy *move = MoveBy::create(0.01f, Vec2(manfu.getSpeed(), 0));
+			auto callfunc = CallFunc::create(this, callfunc_selector(GameScene::eraseItem));
+			man->runAction(Sequence::create(move, callfunc, NULL));
+			//Machine->runAction(Sequence::create(move, NULL));
 		}
 	}
-	else if (waterd == 4) { //水流向右
-		if (sp->getPositionX() < Director::getInstance()->getVisibleSize().width) {
-			sp->setPositionX(sp->getPositionX() + speed_for_water);
-		}
-	}
-	else if (waterd == 5) { //水流向左上
-		if (sp->getPositionX() > 0 && sp->getPositionY() < Director::getInstance()->getVisibleSize().height) {
-			sp->setPosition(Vec2(sp->getPositionX() - speed_for_water / 2, sp->getPositionY() + speed_for_water));
-		}
-	}
-	else if (waterd == 6) { //水流向右上
-		if (sp->getPositionX() < Director::getInstance()->getVisibleSize().width && sp->getPositionY() < Director::getInstance()->getVisibleSize().height) {
-			sp->setPosition(Vec2(sp->getPositionX() + speed_for_water / 2, sp->getPositionY() + speed_for_water));
-		}
-	}
-	else if (waterd == 7) { //水流向左下
-		if (sp->getPositionX() > 0 && sp->getPositionY() > 0) {
-			sp->setPosition(Vec2(sp->getPositionX() - speed_for_water / 2, sp->getPositionY() - speed_for_water / 2));
-		}
-	}
-	else if (waterd == 8) { //水流向右下
-		if (sp->getPositionX() < Director::getInstance()->getVisibleSize().width && sp->getPositionY() > 0) {
-			sp->setPosition(Vec2(sp->getPositionX() + speed_for_water / 2, sp->getPositionY() - speed_for_water / 2));
+	else if (useKey == 4)
+	{
+		if (man->getPositionX() > 0) {
+			MoveBy *move = MoveBy::create(0.01f, Vec2(-manfu.getSpeed(), 0));
+			auto callfunc = CallFunc::create(this, callfunc_selector(GameScene::eraseItem));
+			man->runAction(Sequence::create(move, callfunc, NULL));
+			//Machine->runAction(Sequence::create(move, NULL));
 		}
 	}
 }
+
+//机器人放置炸弹
+void GameScene5::MachineBomb(float f) {
+	int temp = rand() % 8;
+
+	if (temp == 0) {
+		//增加可以放置炸弹的上限
+		GameScene2::bombnum++;
+		//更新数据
+		auto scoreSpire = (Label *)this->getChildByTag(117);
+		scoreSpire->setString(String::createWithFormat("NUM:%d", bombnum)->_string);
+		//创建炸弹
+		bomb = Sprite::create("boom.png");
+		bomb->setTag(1);
+		sp_file.insert(pair<int, string>(1, "boom.png"));
+		bomb->setPosition(Machine->getPosition());
+		bomb->setAnchorPoint(Vec2(0, 0));
+		this->addChild(bomb, 1);
+		bombs.push_back(bomb);
+		
+		schedule(schedule_selector(GameScene::eraseBomb), 0.5f);
+		scheduleOnce(schedule_selector(GameScene5::MachineReduc), 0.01f);
+	}
+}
+
+//减少可以放置炸弹的上限
+void GameScene5::MachineReduc(float f) {
+	GameScene2::bombnum--;
+	auto scoreSpire = (Label *)this->getChildByTag(117);
+	scoreSpire->setString(String::createWithFormat("NUM:%d", bombnum)->_string);
+}
+

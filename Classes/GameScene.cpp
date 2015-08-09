@@ -7,6 +7,11 @@
 #include "Collision.h"
 #include <iostream>
 #include <string>
+#include "SimpleAudioEngine.h"
+
+
+using namespace CocosDenshion;
+USING_NS_CC;
 
 #pragma execution_character_set("utf-8")
 
@@ -69,6 +74,16 @@ bool GameScene::init()
 	costTime = 0; // 初始化花去的时间
 	cs = 0;
 	xm = 0;
+	isPause = false;
+	useBgm = true;
+
+
+	// 预载入音乐、音效
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bgm.mp3");
+	SimpleAudioEngine::getInstance()->preloadEffect("music/boom.mp3");
+	// 播放背景音乐
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bgm.mp3", true);
+
 
 	//背景精灵
 	auto bg1 = Sprite::create("background.jpg");
@@ -92,12 +107,35 @@ bool GameScene::init()
 	menu->setPosition(visibleSize.width - 150, btn1->getContentSize().height + 20);
 	this->addChild(menu, 1);
 
+	//预先将鱼的图片纹理存起来
+	spriteTexture1 = CCSpriteBatchNode::create("fish2.png");
+	spriteTexture1->setPosition(Vec2(0, 0));
+	addChild(spriteTexture1, 2);
+	spriteTexture2 = CCSpriteBatchNode::create("fish1.png");
+	spriteTexture2->setPosition(Vec2(0, 0));
+	addChild(spriteTexture2, 2);
+	spriteTexture3 = CCSpriteBatchNode::create("fish3.png");
+	spriteTexture3->setPosition(Vec2(0, 0));
+	addChild(spriteTexture3, 2);
+
 	// 炸弹数量标记
 	bombCount = MenuItemImage::create("x0.png", "x0.png");
 	auto menu2 = Menu::create(bombCount, NULL);
 	menu2->setPosition(visibleSize.width - 50, 30);
 	menu2->setAnchorPoint(Vec2(0, 0));
 	this->addChild(menu2);
+
+	
+	// 创建暂停按钮,返回按钮和控制音乐按钮.
+	auto btn3 = MenuItemImage::create("continue.png", "continue2.png", CC_CALLBACK_0(GameScene::pauseGame, this));
+	auto btn4 = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_0(GameScene::goHomePage, this));
+	auto btn5 = MenuItemImage::create("select_guan.png", "select_guan.png", CC_CALLBACK_0(GameScene::soundUsing, this));
+	auto menu3 = Menu::create(btn3, btn4, btn5, NULL);
+	menu3->alignItemsVerticallyWithPadding(30);
+	menu3->setAnchorPoint(Vec2(0, 0));
+	menu3->setPosition(visibleSize.width - 100, 500);
+	this->addChild(menu3, 1);
+	
 	
 	//创建人物
 	man->setPosition(visibleSize.width / 2, visibleSize.height / 2);
@@ -305,21 +343,30 @@ void GameScene::enemyCreate(float f)
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
+	//创建精灵
+	Sprite* enemy;
 	int temp = rand() % 3;
 	if (temp == 0) {
-		src = "fish2.png";
+		enemy = Sprite::createWithTexture(spriteTexture1->getTexture());
 		blood = 1;
+		enemy->setTag(104);
+		sp_file.insert(pair<int, string>(104, "fish2.png"));
 	}
 	else if (temp == 1) {
-		src = "fish1.png";
+		enemy = Sprite::createWithTexture(spriteTexture2->getTexture());
 		blood = 2;
+		enemy->setTag(105);
+		sp_file.insert(pair<int, string>(105, "fish1.png"));
 	}
 	else {
-		src = "fish3.png";
+		enemy = Sprite::createWithTexture(spriteTexture3->getTexture());
 		blood = 3;
+		enemy->setTag(106);
+		sp_file.insert(pair<int, string>(106, "fish3.png"));
 	}
+	/*
 	//CCSprite * enemy;
-	auto enemy = Sprite::create(src);
+	//auto enemy = Sprite::create(src);
 	if (src == "fish2.png") {
 		//enemy = CCSprite::createWithTexture(batchNode1->getTexture());
 		enemy->setTag(104);
@@ -334,7 +381,7 @@ void GameScene::enemyCreate(float f)
 		//enemy = CCSprite::createWithTexture(batchNode3->getTexture());
 		enemy->setTag(106);
 		sp_file.insert(pair<int, string>(106, "fish3.png"));
-	}
+	}*/
 	//设置锚点
 	enemy->setAnchorPoint(Vec2(0, 0));
 	director_ = rand() % 12;
@@ -521,11 +568,16 @@ void GameScene::eraseBomb(float t)
 		{
 			Sprite* temp[9];
 			int count = 0;
+			CCSpriteBatchNode* spriteTexture = CCSpriteBatchNode::create("b1.png"); 
+			spriteTexture->setPosition(Vec2(0, 0));
+			addChild(spriteTexture, 2); 
+			//CCSprite* sprite = CCSprite::createWithTexture(spriteTexture->getTexture());
+			//sprite->setPosition(ccp(visiblesize.width / 2, 100)); spriteTexture->addChild(sprite, 2);
 			for (int i = -1; i <= 1; i++)
 			{
 				for (int j = -1; j <= 1; j++)
 				{
-					temp[count] = Sprite::create("b1.png");
+					temp[count] = Sprite::createWithTexture(spriteTexture->getTexture());
 					temp[count]->setPosition(pos.x + bombSize.width * i, pos.y + bombSize.height * j);
 					this->addChild(temp[count], 2);
 					temp[count]->runAction(Sequence::create(DelayTime::create(0.4f), Hide::create(), NULL));
@@ -539,6 +591,9 @@ void GameScene::eraseBomb(float t)
 		(*i)->removeFromParent();
 		//this->removeChild(*i);
 		bombs.erase(i);
+
+		// 发出音效
+		SimpleAudioEngine::getInstance()->playEffect("music/boom.mp3");
 	}
 
 	if (bombs.empty())
@@ -564,11 +619,14 @@ void GameScene::eraseBomb2(float t)
 		{
 			Sprite* temp[25];
 			int count = 0;
+			CCSpriteBatchNode* spriteTexture = CCSpriteBatchNode::create("b2.png");
+			spriteTexture->setPosition(Vec2(0,0));
+			addChild(spriteTexture, 2);
 			for (int i = -2; i <= 2; i++)
 			{
 				for (int j = -2; j <= 2; j++)
 				{
-					temp[count] = Sprite::create("b2.png");
+					temp[count] = Sprite::createWithTexture(spriteTexture->getTexture());
 					temp[count]->setPosition(pos.x + bombSize.width * i, pos.y + bombSize.height * j);
 					this->addChild(temp[count], 2);
 					temp[count]->runAction(Sequence::create(DelayTime::create(0.4f), Hide::create(), NULL));
@@ -581,6 +639,9 @@ void GameScene::eraseBomb2(float t)
 		(*i)->removeFromParent();
 		//this->removeChild(*i);
 		bombs2.erase(i);
+
+		// 发出音效
+		SimpleAudioEngine::getInstance()->playEffect("music/boom.mp3");
 	}
 
 	if (bombs2.empty())
@@ -941,6 +1002,8 @@ void GameScene::createLabel() {
 
 //游戏结束
 void GameScene::gameOver() {
+	SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+	SimpleAudioEngine::getInstance()->stopAllEffects();
 	GameOverScene::win_num = 0;
 	auto scene = GameOverScene::createScene();
 	auto gameOverScene = TransitionTurnOffTiles::create(1.0f, scene);
@@ -950,6 +1013,8 @@ void GameScene::gameOver() {
 
 //游戏胜利
 void GameScene::win() {
+	SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+	SimpleAudioEngine::getInstance()->stopAllEffects();
 	auto scene = GameOverScene::createScene();
 	auto gameOverScene = TransitionTurnOffTiles::create(1.0f, scene);
 	CCTextureCache::sharedTextureCache()->removeAllTextures();
@@ -978,4 +1043,41 @@ void GameScene::timeOut(float t) {
 void GameScene::stopAllSchedule()
 {
 	this->unscheduleAllSelectors();
+}
+
+// 暂停游戏
+void GameScene::pauseGame()
+{
+	if (!isPause) {
+		this->pause();
+		isPause = true;
+	}		
+	else {
+		this->resume();
+		isPause = false;
+	}
+}
+
+// 返回主页面
+void GameScene::goHomePage()
+{
+	unscheduleAllSelectors();
+	GameOverScene::win_num = 0;
+	auto scene = HelloWorld::createScene();
+	auto gameOverScene = TransitionTurnOffTiles::create(1.0f, scene);
+	CCTextureCache::sharedTextureCache()->removeAllTextures();
+	Director::getInstance()->replaceScene(gameOverScene);
+}
+
+// 是否使用音乐音效
+void GameScene::soundUsing()
+{
+	if (!useBgm) {
+		SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bgm.mp3", true);
+		useBgm = true;
+	}
+	else {
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+		useBgm = false;
+	}
 }

@@ -5,6 +5,7 @@
 #include "AppDelegate.h"
 #include "GameScene3.h"
 #include "GameScene4.h"
+#include "GameScene5.h"
 
 USING_NS_CC;
 
@@ -69,6 +70,16 @@ bool Help::init() {
 		bg1->setTag(101);
 		this->addChild(bg1, 0);
 	}
+	else if (getPass() == 5) {
+		auto bg1 = Sprite::create("help_bg4.png");
+		//为适应屏幕进行缩放
+		bg1->setScaleX((float)visibleSize.width / (float)bg1->getContentSize().width);
+		bg1->setScaleY((float)visibleSize.height / (float)bg1->getContentSize().height);
+		bg1->setPosition(Vec2(origin.x + visibleSize.width / 2, 0));
+		bg1->setAnchorPoint(Vec2(0.5, 0));
+		bg1->setTag(101);
+		this->addChild(bg1, 0);
+	}
 	
 	auto MagicItem = MenuItemImage::create("continue.png", "continue2.png",
 		CC_CALLBACK_1(Help::menuContinueCallback, this));
@@ -99,6 +110,11 @@ void Help::menuContinueCallback(Ref* spender) {
 	}
 	else if (getPass() == 4) {
 		auto scene = GameScene4::createScene();
+		auto gameScene = TransitionSlideInR::create(1.0f, scene);
+		Director::getInstance()->replaceScene(gameScene);
+	}
+	else if (getPass() == 5) {
+		auto scene = GameScene5::createScene();
 		auto gameScene = TransitionSlideInR::create(1.0f, scene);
 		Director::getInstance()->replaceScene(gameScene);
 	}

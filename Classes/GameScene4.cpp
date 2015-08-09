@@ -5,6 +5,10 @@
 #include "Man_2.h"
 #include "Man_3.h"
 #include "Man.h"
+#include "SimpleAudioEngine.h"
+
+
+using namespace CocosDenshion;
 
 USING_NS_CC;
 
@@ -60,8 +64,18 @@ bool GameScene4::init() {
 	bombNum = 0; // 初始化大威力炸弹数量
 	totalTime = 100; // 初始化总时长
 	costTime = 0; // 初始化花去的时间
+	GameScene2::bombnum = 1; // 初始化炸弹可以出现的数量
 	cs = 0;
 	xm = 0;
+	isPause = false;
+	useBgm = true;
+
+
+	// 预载入音乐、音效
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bgm.mp3");
+	SimpleAudioEngine::getInstance()->preloadEffect("music/boom.mp3");
+	// 播放背景音乐
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bgm.mp3", true);
 
 	//背景精灵
 	auto bg1 = Sprite::create("background.jpg");
@@ -93,11 +107,33 @@ bool GameScene4::init() {
 	menu2->setAnchorPoint(Vec2(0, 0));
 	this->addChild(menu2);
 
+	// 创建暂停按钮,返回按钮和控制音乐按钮.
+	auto btn3 = MenuItemImage::create("continue.png", "continue2.png", CC_CALLBACK_0(GameScene::pauseGame, this));
+	auto btn4 = MenuItemImage::create("exit.png", "exit2.png", CC_CALLBACK_0(GameScene::goHomePage, this));
+	auto btn5 = MenuItemImage::create("select_guan.png", "select_guan.png", CC_CALLBACK_0(GameScene::soundUsing, this));
+	auto menu3 = Menu::create(btn3, btn4, btn5, NULL);
+	menu3->alignItemsVerticallyWithPadding(30);
+	menu3->setAnchorPoint(Vec2(0, 0));
+	menu3->setPosition(visibleSize.width - 100, 500);
+	this->addChild(menu3, 1);
+
+	//预先将鱼的图片纹理存起来
+	spriteTexture1 = CCSpriteBatchNode::create("fish2.png");
+	spriteTexture1->setPosition(Vec2(0, 0));
+	addChild(spriteTexture1, 2);
+	spriteTexture2 = CCSpriteBatchNode::create("fish1.png");
+	spriteTexture2->setPosition(Vec2(0, 0));
+	addChild(spriteTexture2, 2);
+	spriteTexture3 = CCSpriteBatchNode::create("fish3.png");
+	spriteTexture3->setPosition(Vec2(0, 0));
+	addChild(spriteTexture3, 2);
+
+
 	//创建人物
 	man->setPosition(visibleSize.width / 2, visibleSize.height / 2);
 	man->setTag(3);
 	man->setAnchorPoint(Vec2(0, 0));
-	sp_file.insert(pair<int, string>(102, man_name));
+	sp_file.insert(pair<int, string>(3, man_name));
 	this->addChild(man, 5);
 
 	//定时调用移动函数
@@ -320,5 +356,4 @@ void GameScene4::objectMove(float f) {
 			}
 		}
 	}
-	//delete [] speedlist;
 }
